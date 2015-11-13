@@ -1,5 +1,6 @@
 ﻿{
-	Программа преобразует числа из файлов "number1.txt","number2.txt" в двумерный массив. Результаты вычислений записывает в файлы Sum.txt и Sub.txt.
+	Программа преобразует числа из файлов "number1.txt","number2.txt" в двумерный массив.
+	Результаты вычислений записывает в файлы Sum.txt и Sub.txt.
 }
 
 program lab1;
@@ -10,7 +11,7 @@ type  Tlong = array [1..2,1..n] of byte; //Tlong - это тип массива,
 
 var Fnumb : text;	//ассоциируем с файлом
 	Error : boolean;//индикатор ошибок
-	Anumb : Tlong;	//массив, который хранит в первой ячейке разрядность числа, а потом само число в перевернутом виде
+	Anumb : Tlong;	//массив, в первой ячейке разрядность числа, далее - само число поразрядно в перевернутом виде
 	Bnumb : Tlong;	//второе такое число
 	equal : boolean;//True если числа равны
 	Cnumb : Tlong;	//результирующее суммы
@@ -109,7 +110,7 @@ procedure Read_TLong(var f : text; var mas : Tlong; var Err : boolean); //счи
 		end
 		else
 			begin
-				writeln('выход за границы массива, нужно увеличить кол-во элементов в массиве');
+				writeln('выход за границы массива, нужно увеличить кол-во элементов в массиве (увеличь n!)');
 				Err := true;
 			end;
 	end;
@@ -334,16 +335,18 @@ procedure Sub_Tlong(A,B : TLong; var D : TLong; compare : boolean);
 			inc(i);
 		end;
 
-		writeln('D  (результирующая разности)'); //пр
-		write('[целая] = ':12);				//пр
-		for i:=1 to D[1,1]+1 do				//пр
-			write('[',D[1,i],']');			//пр
-		writeln;							//пр
-		write('[дробная] = ':12);			//пр
-		for i := 1 to D[2,1]+1 do			//пр
-			write('[',D[2,i],']');			//пр
-		writeln;							//пр
-		writeln;							//пр
+		//для удобной проверки
+		writeln('D  (результирующая разности)');
+		write('[целая] = ':12);
+		for i:=1 to D[1,1]+1 do
+			write('[',D[1,i],']');
+		writeln;
+		write('[дробная] = ':12);
+		for i := 1 to D[2,1]+1 do
+			write('[',D[2,i],']');
+		writeln;
+		writeln;
+		//для удобной проверки
 
 	end;
 
@@ -365,8 +368,8 @@ Begin
 				Write_TLong (Fnumb,Cnumb);
 
 				//разность
-				equal := false;//обнуляй
-				if (LessOrEq(Anumb, Bnumb, equal) = true) or (equal = true) then
+				equal := false; //обнуляй
+				if (LessOrEq(Anumb, Bnumb, equal) = true) or (equal = true) then //нужно от большено отнимать меньшее
 					Sub_Tlong(Anumb, Bnumb, Dnumb, LessOrEq(Anumb, Bnumb, equal)) //разность без рокировки
 				else
 					Sub_Tlong(Bnumb, Anumb, Dnumb, LessOrEq(Anumb, Bnumb, equal)); //разность с рокировкой
