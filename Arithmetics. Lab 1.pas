@@ -1,4 +1,4 @@
-﻿{
+{
 	Программа преобразует числа из файлов "number1.txt","number2.txt" в двумерный массив.
 	Результаты вычислений записывает в файлы Sum.txt и Sub.txt.
 }
@@ -132,7 +132,7 @@ procedure Write_TLong (var f : text; var mas : Tlong); //процедура вы
 			write(f,'.'); //...add point
 			for i:=2 to mas[2,1]+1 do //вывод дробной части в файл
 			begin
-				if (mas[2,i] < 10)  then //дополнение нулем 
+				if (mas[2,i] < 10) and (mas[2,1] > 1) then //дополнение нулем 
 					write(f,'0',IntToStr(mas[2,i]))
 				else
 					if (mas[2,i] > 1) and (mas[2,i] mod 10 = 0) and (i = mas[2,1]+1) then
@@ -189,7 +189,6 @@ procedure Sum_TLong(A,B : TLong; var C : TLong);
 	begin
 
 		//сложение дробных частей
-
 		if (A[2,1] > 0) or (B[2,1] > 0) then //при существовании дробной части
 		begin
 			if A[2,1] >= B[2,1] then //чтобы складывать с последнего элемента, выберем больший ранг
@@ -218,9 +217,16 @@ procedure Sum_TLong(A,B : TLong; var C : TLong);
 				dec(i);
 			end;
 		end;
-
+		
+		//убираем лишние нули у дробной части
+		i:=A[2,1] + 1;
+		while (C[2,i] = 0) and (i>2) do
+		begin
+			dec(C[2,1]);
+			dec(i);
+		end;
+		
 		//сложение целых частей
-
 		i:=2; //складываем массивы со второго элемента
 		while (i <= A[1,1] + 1) or (i <= B[1,1] + 1) do //перебор с последнего эл до первого
 		begin
@@ -245,6 +251,14 @@ procedure Sum_TLong(A,B : TLong; var C : TLong);
 			inc(i);//делаем шаг
 		end;
 
+		//убираем лишние нули у целой части
+		i:=A[1,1] + 1;
+		while (C[1,i] = 0) and (i>2) do
+		begin
+			dec(C[1,1]);
+			dec(i);
+		end;
+
 		//удобненькая проверка
 		writeln('C  (результирующая сложения)');
 		write('[целая] = ':12);
@@ -264,8 +278,8 @@ procedure Sub_Tlong(A,B : TLong; var D : TLong; compare : boolean);
 	var i,j : integer;
 
 	begin
+		
 		//дробная часть
-
 		if (A[2,1]>0) or (B[2,1]>0) then //если присутствует дробная часть
 		begin
 			if A[2,1]>B[2,1] then //найдем максимальное количество разрядов
@@ -306,9 +320,16 @@ procedure Sub_Tlong(A,B : TLong; var D : TLong; compare : boolean);
 			end;
 		end;
 
+		//убираем лишние нули у дробной части
+		i:=A[2,1] + 1;
+		while (D[2,i] = 0) and (i>2) do
+		begin
+			dec(D[2,1]);
+			dec(i);
+		end;
+
 		//целая часть
 		i:=2;
-		var flag := false;
 		while (i <= A[1,1] + 1) do
 		begin
 			if A[1,i]<B[1,i] then
@@ -325,14 +346,15 @@ procedure Sub_Tlong(A,B : TLong; var D : TLong; compare : boolean);
 			else
 				D[1,i] := A[1,i] - B[1,i];
 			D[1,1] := i;
-		inc(i);
+			inc(i);
 		end;
 
-		i:=2;
-		while D[1,i] = 0 do //нужно убрать лишние нули из начала целого числа
+		//убираем лишние нули у целой части
+		i:=A[1,1] + 1;
+		while (D[1,i] = 0) and (i>2) do
 		begin
 			dec(D[1,1]);
-			inc(i);
+			dec(i);
 		end;
 
 		//для удобной проверки
@@ -394,7 +416,7 @@ Begin
 		if rstr.length = 0 then
 			writeln('Sum.txt = ПУСТО')
 		else
-			writeln('number 3 = ',rstr);
+			writeln('Sum.txt = ',rstr);
 		close(Fnumb);
 
 		writeln;
