@@ -13,7 +13,6 @@ var Fnumb : text;	//ассоциируем с файлом
 	Error : boolean;//индикатор ошибок
 	Anumb : Tlong;	//массив, в первой ячейке разрядность числа, далее - само число поразрядно в перевернутом виде
 	Bnumb : Tlong;	//второе такое число
-	equal : boolean;//True если числа равны
 	Cnumb : Tlong;	//результирующее суммы
 	Dnumb : Tlong;	//разультурующее разности
 
@@ -145,16 +144,15 @@ procedure Write_TLong (var f : text; var mas : Tlong); //процедура вы
 
 	end;
 
-function LessOrEq(A,B : Tlong; var Eq : boolean) : boolean; //Сравнение. Если А>B, то true, иначе false. Если Eq = true, то А = В
+function LessOrEq(A,B : Tlong) : byte; //Сравненивает A и B. 1,2,3 при >,<,= соответственно.
 	var i:integer;
 
 	begin //сначала проверка по целой части
-		Eq := false;
 		if A[1,1] <> B[1,1] then //сравниваем ранги
 			if A[1,1] > B[1,1] then
-				LessOrEq := true //A>B по рангу
+				LessOrEq := 1 //A>B по рангу
 			else
-				LessOrEq := false //A<B по рангу
+				LessOrEq := 2 //A<B по рангу
 		else //если ранги равны, то сравним элементы массивов
 		begin
 			i := A[1,1] + 1; //последний эл массива
@@ -162,9 +160,9 @@ function LessOrEq(A,B : Tlong; var Eq : boolean) : boolean; //Сравнение
 				dec(i);
 			if i > 1 then //если не дошли до начала массива, значит остановились на неравных элементах
 				if A[1,i] > B[1,i] then
-					LessOrEq := true
+					LessOrEq := 1 //A>B
 				else
-					LessOrEq := false
+					LessOrEq := 2 //A<B
 			else //сравнение дробной части
 			begin
 			i:=2;
@@ -172,12 +170,12 @@ function LessOrEq(A,B : Tlong; var Eq : boolean) : boolean; //Сравнение
 					inc(i);
 				if A[2,i] <> B[2,i] then
 					if A[2,i] > B[2,i] then
-						LessOrEq := true
+						LessOrEq := 1 //A>B
 					else
-						LessOrEq := false
+						LessOrEq := 2 //A<B
 				else
 				begin
-					Eq := true; //дробные части равны!
+					LessOrEq := 3; //дробные части равны!
 				end;
 			end; 
 		end;
@@ -274,7 +272,7 @@ procedure Sum_TLong(A,B : TLong; var C : TLong);
 
 	end;
 
-procedure Sub_Tlong(A,B : TLong; var D : TLong; compare : boolean);
+procedure Sub_Tlong(A,B : TLong; var D : TLong);
 	var i,j : integer;
 
 	begin
@@ -389,12 +387,10 @@ Begin
 				Assign(Fnumb,'Sum.txt');
 				Write_TLong (Fnumb,Cnumb);
 
-				//разность
-				equal := false; //обнуляй
-				if (LessOrEq(Anumb, Bnumb, equal) = true) or (equal = true) then //нужно от большено отнимать меньшее
-					Sub_Tlong(Anumb, Bnumb, Dnumb, LessOrEq(Anumb, Bnumb, equal)) //разность без рокировки
-				else
-					Sub_Tlong(Bnumb, Anumb, Dnumb, LessOrEq(Anumb, Bnumb, equal)); //разность с рокировкой
+				case LessOrEq(Anumb, Bnumb) of
+					1,3:Sub_Tlong(Anumb, Bnumb, Dnumb);//разность с рокировкой
+					2: 	Sub_Tlong(Bnumb, Anumb, Dnumb);//разность без рокировки
+				end;
 				Assign(Fnumb,'Sub.txt');
 				Write_TLong (Fnumb,Dnumb);
 			end
