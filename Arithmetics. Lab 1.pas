@@ -1,6 +1,7 @@
-{
-	Программа преобразует числа из файлов "number1.txt","number2.txt" в двумерный массив.
-	Результаты вычислений записывает в файлы Sum.txt и Sub.txt.
+﻿{
+	Программа преобразует поразрядно числа из файла input.txt в двумерные массивы.
+	Производит с ними операции сложение, разность.
+	Результаты вычислений записывает в файл output.txt.
 }
 
 program lab1;
@@ -25,13 +26,13 @@ procedure Read_TLong(var f : text; var mas : Tlong; var Err : boolean); //счи
 		rstring,fstring : string; //для целой и дробной частей
 
 	begin
-		read(f,rstring); //считывание числа в строковую переменную
-		close(f);
+		readln(f,rstring); //считывание числа в строковую переменную
 
 		ValErr := 0; //обнуление индикаторов ошибок
 		Err := false;
 
 		rstring := Trim(rstring); //убираем лишние пробелы по бокам
+
 		writeln('Входные данные');
 		writeln(rstring); // для удобной проверки
 
@@ -39,6 +40,7 @@ procedure Read_TLong(var f : text; var mas : Tlong; var Err : boolean); //счи
 		begin
 			point := pos('.',rstring);	//хранит место точки
 			if rstring.IndexOf('.') > 0 then
+			begin
 				if pos('.',rstring.Remove(rstring.IndexOf('.'),1)) > 0 then //если есть точка и только одна, значит нужно выделить дробную часть
 				begin
 					writeln('Лишние точки. Ошибка!');
@@ -46,6 +48,8 @@ procedure Read_TLong(var f : text; var mas : Tlong; var Err : boolean); //счи
 				end
 				else //ошибки нет, работаем с дробной частью
 				begin
+					while (rstring[rstring.length]='0') or (rstring[rstring.length]='.') do //убираем незначащие нули
+						delete(rstring,rstring.length,1);
 					fstring := copy(rstring, point + 1, length(rstring) - point); //формируем строку с дробной частью
 					delete(rstring, point, length(rstring) - point + 1);	//удаляем дробную часть и оставляем целую
 					if fstring.length mod 2 = 0 then
@@ -69,9 +73,12 @@ procedure Read_TLong(var f : text; var mas : Tlong; var Err : boolean); //счи
 						inc(i);
 					end;
 				end;
+			end;
 
-			if Err = false then // если ошибок не было, то работаем с целой частью
+			if (Err = false) and (rstring.length > 0) then // если ошибок не было, то работаем с целой частью
 			begin
+				while (rstring[1]='0') and (rstring.length > 1) do //убираем незначащие нули
+					delete(rstring,1,1);
 				if rstring.length mod 2 = 0 then {если четное кол-во эл, то не нужно дополнять нулем}
 					mas[1,1] := rstring.length div 2	{записываем разрядность в первый эл массива}
 				else
@@ -118,13 +125,13 @@ procedure Write_TLong (var f : text; var mas : Tlong); //процедура вы
 	var i : Integer;
 
 	begin
-		Rewrite(f);
+		
 		for i := mas[1,1] downto 2 do //вывод целой части в файл
 		begin
 			if (mas[1,i] < 10) and (i<>mas[1,1]) then //добавим 0, если элемент массива <10
-				write(f,'0',IntToStr(mas[1,i]))
+				write(f,'0',mas[1,i])
 			else
-				write(f,IntToStr(mas[1,i])); //преобразуем в стринг и пишем в файл
+				write(f,mas[1,i]); //преобразуем в стринг и пишем в файл
 		end;
 		if mas[2,1] <> 0 then //if we have real part then...
 		begin
@@ -132,16 +139,16 @@ procedure Write_TLong (var f : text; var mas : Tlong); //процедура вы
 			for i:=2 to mas[2,1]+1 do //вывод дробной части в файл
 			begin
 				if (mas[2,i] < 10) and (mas[2,1] > 1) then //дополнение нулем 
-					write(f,'0',IntToStr(mas[2,i]))
+					write(f,'0',mas[2,i])
 				else
 					if (mas[2,i] > 1) and (mas[2,i] mod 10 = 0) and (i = mas[2,1]+1) then
 						write(f,mas[2,i] div 10)
 					else
-						write(f,IntToStr(mas[2,i]));
+						write(f,mas[2,i]);
 			end;
 		end;
-		close(f);
-
+		
+		writeln(f);
 	end;
 
 function LessOrEq(A,B : Tlong) : byte; //Сравненивает A и B. 1,2,3 при >,<,= соответственно.
@@ -371,59 +378,60 @@ procedure Sub_Tlong(A,B : TLong; var D : TLong);
 	end;
 
 Begin 
-	if (FileExists('number1.txt') = true) and (FileExists('number2.txt') = true) and (FileExists('Sum.txt') = true) and (FileExists('Sub.txt')) then{Проверка на сущ файла}
+	if (FileExists('input.txt') = true) and (FileExists('output.txt') = true) then //Проверка на существование файлов
 	begin
-		Assign(Fnumb, 'number1.txt'); //работа с первым файлом
+		Assign(Fnumb, 'input.txt');
 		Reset(Fnumb);
 		Read_TLong(Fnumb, Anumb, Error); //Процедура считывания в массив
-		Assign(Fnumb, 'number2.txt'); //работа со вторым файлом
 		if Error=false then 
 		begin
-			Reset(Fnumb);
 			Read_Tlong(Fnumb, Bnumb, Error);
+			close(Fnumb);
 			if Error = false then 
 			begin
-				Sum_TLong(Anumb, Bnumb, Cnumb);	//суммируем
-				Assign(Fnumb,'Sum.txt');
-				Write_TLong (Fnumb,Cnumb);
-
-				case LessOrEq(Anumb, Bnumb) of
+				Rewrite(Fnumb,'output.txt');
+				
+				Sum_TLong(Anumb, Bnumb, Cnumb);	//найдем сумму
+				case LessOrEq(Anumb, Bnumb) of //найдем разность
 					1,3:Sub_Tlong(Anumb, Bnumb, Dnumb);//разность с рокировкой
 					2: 	Sub_Tlong(Bnumb, Anumb, Dnumb);//разность без рокировки
 				end;
-				Assign(Fnumb,'Sub.txt');
+				
+				Write_TLong (Fnumb,Cnumb); //запись результов в файл
 				Write_TLong (Fnumb,Dnumb);
+				close(Fnumb);
+				
+				//удобный вывод результатов
+				var count: byte := 0;
+				writeln;
+				assign(Fnumb, 'output.txt');
+				reset(Fnumb);
+				while not Eof(Fnumb) do
+				begin
+					inc(count);
+					readln(Fnumb,rstr);
+					if rstr.length <> 0 then
+					begin
+						case count of
+							1: write('Sum = ');
+							2: write('Sub = ');
+							else 
+								writeln('count больше 2-х :C');
+						end;
+						writeln(rstr);
+					end
+					else
+						writeln('ПУСТО');
+				end;
+				close(Fnumb);
+				//\удобный вывод результатов
 			end
 			else 
-				writeln('ошибка при работе со вторым файлом');
+				writeln('ошибка при считывании первого числа из файла input.txt');
 		end
 		else
-			writeln('ошибка при работе с первым файлом');
+			writeln('ошибка при считывании второго числа из файла input.txt');
 	end
-	else writeln('Один из файлов не существует');
-
-	//удобный вывод результатов
-	if Error = false then
-	begin
-		writeln;
-		assign(Fnumb, 'Sum.txt');
-		reset(Fnumb);
-		read(Fnumb,rstr);
-		if rstr.length = 0 then
-			writeln('Sum.txt = ПУСТО')
-		else
-			writeln('Sum.txt = ',rstr);
-		close(Fnumb);
-
-		writeln;
-		assign(Fnumb, 'Sub.txt');
-		reset(Fnumb);
-		read(Fnumb,rstr);
-		if rstr.length = 0 then
-			writeln('Sub.txt = ПУСТО')
-		else
-			writeln('Sub.txt = ',rstr);
-		close(Fnumb);
-	end;
+	else writeln('Один из файлов input.txt, output.txt не существует');
 
 End.
